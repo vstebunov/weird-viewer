@@ -1,5 +1,8 @@
-
 const fileList = document.getElementById('files');
+
+const canvas = document.getElementById('canvas');
+canvas.setAttribute('width', 10000);
+canvas.setAttribute('height', 10000);
 
 fileList.addEventListener('change', event => {
     const fileName = event.target.value;
@@ -7,13 +10,18 @@ fileList.addEventListener('change', event => {
     image.src = fileName;
     image.onload = () => {
         const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');    
-        context.drawImage(image, 0, 0);  
-        console.log(image.width, image.height);
-        // Create an ImageData object.
-        var imgd = context.getImageData(0, 0, image.width, image.height);
-        var pix = imgd.data;
+        const context = canvas.getContext('2d', {willReadFrequently: true});    
 
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0);  
+        // Create an ImageData object.
+        const imgd = context.getImageData(0, 0, image.naturalWidth, image.naturalHeight);
+        // context.canvas.width = imgd.width;
+        // context.canvas.height = imgd.height;
+
+        const pix = imgd.data;
+
+        console.log(image.naturalWidth * image.naturalHeight * 4, pix.length);
         // Loop over each pixel and set a transparent red.
         for (let i = 0; n = pix.length, i < n; i += 4) {
             pix[i  ] = 255 - pix[i  ];
@@ -24,8 +32,6 @@ fileList.addEventListener('change', event => {
 
         // Draw the ImageData object at the given (x,y) coordinates.
         context.putImageData(imgd, 0,0);
-        // canvas.width = image.width;
-        // canvas.height = image.height;
     };
 });
 
