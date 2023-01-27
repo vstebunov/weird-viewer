@@ -1,5 +1,5 @@
 const fileList = document.getElementById('files');
-const imageMode = "floydAtkinson";
+const imageMode = "ditherFloydSteinberg";
 
 const canvas = document.getElementById('canvas');
 // resize work with problems
@@ -25,9 +25,9 @@ fileList.addEventListener('change', event => {
             case "gray":
                 filteredImageData = gray(imgd);
                 break;
-            case "floydAtkinson":
+            case "ditherFloydSteinberg":
                 const grays = toGray(imgd);
-                const flGrays = floydAtkinson(grays, image.naturalWidth, image.naturalHeight);
+                const flGrays = ditherFloydSteinberg(grays, image.naturalWidth, image.naturalHeight);
                 filteredImageData = toRGB(grays, imgd);
                 break;
             default:
@@ -98,7 +98,7 @@ function findClosestPaletteColor(color) {
     return Math.floor(color / 255) * 255;
 }
 
-function floydAtkinson(pixels, width, height) {
+function ditherFloydSteinberg(pixels, width, height) {
     for (let y = 0; y < height-1; y = y + 1) {
         for (let x = 0; x < width-1; x = x + 1) {
             const old_pixel = pixels[x + y * width];
