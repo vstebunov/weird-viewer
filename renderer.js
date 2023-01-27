@@ -1,40 +1,59 @@
 const fileList = document.getElementById('files');
-const imageMode = "ditherFloydSteinberg";
+let imageMode = "ditherAtkinson";
 
 const canvas = document.getElementById('canvas');
 // resize work with problems
 canvas.setAttribute('width', 10000);
 canvas.setAttribute('height', 10000);
 
+document.addEventListener('keypress', event => {
+    if (event.key === 'a') {
+        imageMode = 'ditherAtkinson';
+    } else if (event.key === 'f') {
+        imageMode = 'ditherFloydSteinberg'
+    } else if (event.key === 'g') {
+        imageMode = 'gray'
+    }
+    render();
+});
+
+function render () {
+    const image = document.getElementById('image');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d', {willReadFrequently: true});    
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0);  
+    const imgd = context.getImageData(0, 0, image.naturalWidth, image.naturalHeight);
+    let filteredImageData;
+    switch (imageMode) {
+        case "invert": 
+            filteredImageData = invertColors(imgd);
+            break;
+        case "gray":
+            filteredImageData = gray(imgd);
+            break;
+        case "ditherFloydSteinberg":
+            const grays = toGray(imgd);
+            const flGrays = ditherFloydSteinberg(grays, image.naturalWidth, image.naturalHeight);
+            filteredImageData = toRGB(flGrays, imgd);
+            break;
+        case "ditherAtkinson":
+            const flAtk = ditherAtkinson(toGray(imgd), image.naturalWidth, image.naturalHeight);
+            filteredImageData = toRGB(flAtk, imgd);
+            break;
+        default:
+            filteredImageData = imgd;
+    }
+    // Draw the ImageData object at the given (x,y) coordinates.
+    context.putImageData(filteredImageData, 0,0);
+}
+
 fileList.addEventListener('change', event => {
     const fileName = event.target.value;
     const image = document.getElementById('image');
     image.src = fileName;
     image.onload = () => {
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d', {willReadFrequently: true});    
-
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, 0, 0);  
-        const imgd = context.getImageData(0, 0, image.naturalWidth, image.naturalHeight);
-        let filteredImageData;
-        switch (imageMode) {
-            case "invert": 
-                filteredImageData = invertColors(imgd);
-                break;
-            case "gray":
-                filteredImageData = gray(imgd);
-                break;
-            case "ditherFloydSteinberg":
-                const grays = toGray(imgd);
-                const flGrays = ditherFloydSteinberg(grays, image.naturalWidth, image.naturalHeight);
-                filteredImageData = toRGB(grays, imgd);
-                break;
-            default:
-                filteredImageData = imgd;
-        }
-        // Draw the ImageData object at the given (x,y) coordinates.
-        context.putImageData(filteredImageData, 0,0);
+        render();
     };
 });
 
@@ -111,6 +130,28 @@ function ditherFloydSteinberg(pixels, width, height) {
             pixels[x - 1 + (y + 1) * width] = pixels[x - 1 + (y + 1) * width] + quant_error * 3 / 16;      
             pixels[x     + (y + 1) * width] = pixels[x     + (y + 1) * width] + quant_error * 5 / 16;
             pixels[x + 1 + (y + 1) * width] = pixels[x + 1 + (y + 1) * width] + quant_error * 1 / 16;      
+        }
+    }
+    return pixels;
+}
+
+function ditherAtkinson(pixels, width, height) {
+    for (let y = 0; y < height-1; y = y + 1) {
+        for (let x = 0; x < width-1; x = x + 1) {
+            const old_pixel = pixels[x + y * width];
+            const new_pixel = findClosestPaletteColor(old_pixel);    
+
+            pixels[x + y * width] = new_pixel;
+
+            const quant_error = old_pixel - new_pixel;
+            pixels[x + 1 + y * width]       = pixels[x + 1 + y * width]       + quant_error * 1 / 8;      
+            pixels[x + 2 + y * width]       = pixels[x + 2 + y * width]       + quant_error * 1 / 8;      
+            pixels[x - 1 + (y + 1) * width] = pixels[x - 1 + (y + 1) * width] + quant_error * 1 / 8;      
+            pixels[x     + (y + 1) * width] = pixels[x     + (y + 1) * width] + quant_error * 1 / 8;
+            pixels[x + 1 + (y + 1) * width] = pixels[x + 1 + (y + 1) * width] + quant_error * 1 / 8;      
+            if (y+2 < height) {
+                pixels[x + (y + 2) * width] = pixels[x + (y + 2) * width] + quant_error * 1 / 8;      
+            }
         }
     }
     return pixels;
