@@ -1,5 +1,5 @@
 const fileList = document.getElementById('files');
-let imageMode = "ditherAtkinson";
+let imageMode = "ordered";
 
 const canvas = document.getElementById('canvas');
 // resize work with problems
@@ -13,6 +13,8 @@ document.addEventListener('keypress', event => {
         imageMode = 'ditherFloydSteinberg'
     } else if (event.key === 'g') {
         imageMode = 'gray'
+    } else if (event.key === 's') {
+        imageMode = 'ordered'
     }
     render();
 });
@@ -41,6 +43,9 @@ function render () {
             const flAtk = ditherAtkinson(toGray(imgd), image.naturalWidth, image.naturalHeight);
             filteredImageData = toRGB(flAtk, imgd);
             break;
+        case "ordered":
+            const ordered = ditherOrdered(toGray(imgd), image.naturalWidth, image.naturalHeight);
+            filteredImageData = toRGB(ordered, imgd);
         default:
             filteredImageData = imgd;
     }
@@ -154,5 +159,47 @@ function ditherAtkinson(pixels, width, height) {
             }
         }
     }
+    return pixels;
+}
+
+const map = [];
+map[0] = 1.0 / 17;
+map[1] = 9.0 / 17;
+map[2] = 3.0 / 17;
+map[3] = 11.0 / 17;
+map[4] = 14.0 / 17;
+map[5] = 5.0 / 17;
+map[6] = 16.0 / 17;
+map[7] = 7.0 / 17;
+map[8] = 4.0 / 17;
+map[9] = 12.0 / 17;
+map[10] = 2.0 / 17;
+map[11] = 10.0 / 17;
+map[12] = 16.0 / 17;
+map[13] = 8.0 / 17;
+map[14] = 14.0 / 17;
+map[15] = 6.0 / 17;
+
+function findClosestPaletteColorBW(color, map_value, thresold) {
+    const p = (color + map_value * thresold);
+    if (p < 128) {
+        return 0;
+    } else {    
+        return 255;
+    }
+}
+
+
+function ditherOrdered(pixels, width, height) {
+    const thresold = 255 / 5;
+    for (let y = 0; y < height-1; y = y + 1) {
+        for (let x = 0; x < width-1; x = x + 1) {
+            const map_value = map[(x & 3) + ((y & 3) << 2)];
+            const old_pixel = pixels[x + y * width];      
+            const new_pixel = findClosestPaletteColorBW(old_pixel, map_value, thresold);
+            pixels[x + y * width] = new_pixel;  
+        }
+    }
+
     return pixels;
 }
