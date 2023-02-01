@@ -1,5 +1,6 @@
 const fileList = document.getElementById('files');
-let imageMode = "ordered";
+let imageMode = "orderedZX";
+let globalThresold = 255 / 5;
 
 const canvas = document.getElementById('canvas');
 // resize work with problems
@@ -15,6 +16,14 @@ document.addEventListener('keypress', event => {
         imageMode = 'gray'
     } else if (event.key === 's') {
         imageMode = 'ordered'
+    } else if (event.key === 'z') {
+        imageMode = 'orderedZX'
+    } else if (event.key === 'q') {
+        globalThresold = globalThresold + 1;
+        console.log(globalThresold);
+    } else if (event.key === 'w') {
+        globalThresold = globalThresold - 1;
+        console.log(globalThresold);
     }
     render();
 });
@@ -46,6 +55,9 @@ function render () {
         case "ordered":
             const ordered = ditherOrdered(toGray(imgd), image.naturalWidth, image.naturalHeight);
             filteredImageData = toRGB(ordered, imgd);
+        case "orderedZX":
+            filteredImageData = ditherOrderedZX(imgd, image.naturalWidth, image.naturalHeight);
+            
         default:
             filteredImageData = imgd;
     }
@@ -191,13 +203,56 @@ function findClosestPaletteColorBW(color, map_value, thresold) {
 
 
 function ditherOrdered(pixels, width, height) {
-    const thresold = 255 / 5;
+    const thresold = globalThresold;
     for (let y = 0; y < height-1; y = y + 1) {
         for (let x = 0; x < width-1; x = x + 1) {
             const map_value = map[(x & 3) + ((y & 3) << 2)];
             const old_pixel = pixels[x + y * width];      
             const new_pixel = findClosestPaletteColorBW(old_pixel, map_value, thresold);
             pixels[x + y * width] = new_pixel;  
+        }
+    }
+
+    return pixels;
+}
+
+function findClosestPaletteColorZX(red, green, blue, map_value, thresold) {
+  let r = red + map_value * thresold;
+  let g = green + map_value * thresold;
+  let b = blue + map_value * thresold;
+  const m = Math.max(r,g,b);
+  
+  if (m < 0xD7) {
+    r = 0;
+    g = 0;
+    b = 0;
+  } else if (m != 0xFF) {
+    r = r >= 0xD7 ? 0xD7 : 00;
+    g = g >= 0xD7 ? 0xD7 : 00;
+    b = b >= 0xD7 ? 0xD7 : 00;
+  }
+  
+  return [r,g,b];
+}
+
+function ditherOrderedZX(imgd, width, height) {
+    const thresold = globalThresold;
+    const pixels = imgd.data;
+    for (let y = 0; y < height * 4; y = y + 4) {
+        for (let x = 0; x < width * 4; x = x + 4) {
+            const nx = x / 4;
+            const ny = y / 4;
+            const map_value = map[(nx & 3) + ((ny & 3) << 2)];
+            const new_pixel = findClosestPaletteColorZX(
+                pixels[x + y * width],
+                pixels[x + y * width + 1],
+                pixels[x + y * width + 2],
+                map_value, 
+                thresold
+            );
+            pixels[x + y * width] = new_pixel[0];  
+            pixels[x + y * width + 1] = new_pixel[1];  
+            pixels[x + y * width + 2] = new_pixel[2];  
         }
     }
 
