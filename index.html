@@ -11,7 +11,7 @@
       content="default-src 'self'; script-src 'self'"
     />
     <link href="index.css" rel="stylesheet" />
-    <title>Hello from Electron renderer!</title>
+    <title>Weird Viewer</title>
   </head>
   <body>
     <img id="image" src="" class="main-image" />
@@ -19,6 +19,10 @@
     </select>
     <div class="canvas-pos">
         <canvas id="canvas" class="main-canvas" />
+    </div>
+    <div class="title-container">
+        <h1 id="imagename" class="main-title"></h1>
+        <h2 id="modename" class="main-title"></h2>
     </div>
   </body>
   <script src="./renderer.js"></script>

@@ -1,6 +1,8 @@
 const fileList = document.getElementById('files');
 let imageMode = "orderedZX";
 let globalThresold = 255 / 5;
+let allFilesList = [];
+let fileIndex = 0;
 
 const canvas = document.getElementById('canvas');
 // resize work with problems
@@ -20,10 +22,20 @@ document.addEventListener('keypress', event => {
         imageMode = 'orderedZX'
     } else if (event.key === 'q') {
         globalThresold = globalThresold + 1;
-        console.log(globalThresold);
     } else if (event.key === 'w') {
         globalThresold = globalThresold - 1;
-        console.log(globalThresold);
+    } else if (event.key === 'j') {
+        fileIndex++;
+        if (fileIndex > allFilesList.length) {
+            fileIndex = allFilesList.length - 1;
+        }
+        loadByIndex(fileIndex);
+    } else if (event.key === 'k') {
+        fileIndex--;
+        if (fileIndex < 0) {
+            fileIndex = 0;
+        }
+        loadByIndex(fileIndex);
     }
     render();
 });
@@ -31,6 +43,12 @@ document.addEventListener('keypress', event => {
 function render () {
     const image = document.getElementById('image');
     const canvas = document.getElementById('canvas');
+    const imageModeTitle = document.getElementById('modename');
+    imageModeTitle.innerHTML = imageMode;
+    imageModeTitle.classList.remove('title-animation');
+    /// -> triggering reflow /* The actual magic */
+    imageModeTitle.offsetWidth;
+    imageModeTitle.classList.add('title-animation');
     const context = canvas.getContext('2d', {willReadFrequently: true});    
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(image, 0, 0);  
@@ -66,19 +84,53 @@ function render () {
 }
 
 fileList.addEventListener('change', event => {
-    const fileName = event.target.value;
+    const filePath = event.target.value;
     const image = document.getElementById('image');
-    image.src = fileName;
+    const title = document.getElementById('imagename');
+    fileIndex = allFilesList.findIndex(file => file.path === filePath);
+    if (!fileIndex) {
+        console.log('wrong path!', filePath);
+    }
+    image.src = filePath;
     image.onload = () => {
+        title.innerHTML = allFilesList.find(file => file.path === filePath).name || '';
+        title.classList.remove('title-animation');
+        /// -> triggering reflow /* The actual magic */
+        title.offsetWidth;
+        title.classList.add('title-animation');
         render();
     };
 });
 
+function loadByIndex(index) {
+    if (!allFilesList[index]) {
+        console.log('file not have path', allFilesList, index);
+        return;
+    }
+    if (index < 0 || index > allFilesList.length) {
+        console.log('wrong index', index);
+        return;
+    }
+    const filePath = allFilesList[index].path;
+    const image = document.getElementById('image');
+    const title = document.getElementById('imagename');
+    image.src = filePath;
+    image.onload = () => {
+        title.innerHTML = allFilesList.find(file => file.path === filePath).name || '';
+        title.classList.remove('title-animation');
+        /// -> triggering reflow /* The actual magic */
+        title.offsetWidth;
+        title.classList.add('title-animation');
+        render();
+    };
+}
+
 const renderDir = async () => {
-    const response = await window.files.getAllFiles();
-    const newList = response.map(file => `<option value='${file.path}'>${file.name}</option>`);
+    allFilesList = await window.files.getAllFiles();
+    const newList = allFilesList.map(file => `<option value='${file.path}'>${file.name}</option>`);
     const fileList = document.getElementById('files');
     fileList.innerHTML = newList.join();
+    loadByIndex(0);
 }
 
 renderDir();
@@ -174,23 +226,6 @@ function ditherAtkinson(pixels, width, height) {
     return pixels;
 }
 
-const map = [];
-map[0] = 1.0 / 17;
-map[1] = 9.0 / 17;
-map[2] = 3.0 / 17;
-map[3] = 11.0 / 17;
-map[4] = 14.0 / 17;
-map[5] = 5.0 / 17;
-map[6] = 16.0 / 17;
-map[7] = 7.0 / 17;
-map[8] = 4.0 / 17;
-map[9] = 12.0 / 17;
-map[10] = 2.0 / 17;
-map[11] = 10.0 / 17;
-map[12] = 16.0 / 17;
-map[13] = 8.0 / 17;
-map[14] = 14.0 / 17;
-map[15] = 6.0 / 17;
 
 function findClosestPaletteColorBW(color, map_value, thresold) {
     const p = (color + map_value * thresold);
@@ -203,6 +238,23 @@ function findClosestPaletteColorBW(color, map_value, thresold) {
 
 
 function ditherOrdered(pixels, width, height) {
+    const map = [];
+    map[0] = 1.0 / 17;
+    map[1] = 9.0 / 17;
+    map[2] = 3.0 / 17;
+    map[3] = 11.0 / 17;
+    map[4] = 14.0 / 17;
+    map[5] = 5.0 / 17;
+    map[6] = 16.0 / 17;
+    map[7] = 7.0 / 17;
+    map[8] = 4.0 / 17;
+    map[9] = 12.0 / 17;
+    map[10] = 2.0 / 17;
+    map[11] = 10.0 / 17;
+    map[12] = 16.0 / 17;
+    map[13] = 8.0 / 17;
+    map[14] = 14.0 / 17;
+    map[15] = 6.0 / 17;
     const thresold = globalThresold;
     for (let y = 0; y < height-1; y = y + 1) {
         for (let x = 0; x < width-1; x = x + 1) {
@@ -236,6 +288,23 @@ function findClosestPaletteColorZX(red, green, blue, map_value, thresold) {
 }
 
 function ditherOrderedZX(imgd, width, height) {
+    const map = [];
+    map[0] = 1.0 / 17;
+    map[1] = 9.0 / 17;
+    map[2] = 3.0 / 17;
+    map[3] = 11.0 / 17;
+    map[4] = 14.0 / 17;
+    map[5] = 5.0 / 17;
+    map[6] = 16.0 / 17;
+    map[7] = 7.0 / 17;
+    map[8] = 4.0 / 17;
+    map[9] = 12.0 / 17;
+    map[10] = 2.0 / 17;
+    map[11] = 10.0 / 17;
+    map[12] = 16.0 / 17;
+    map[13] = 8.0 / 17;
+    map[14] = 14.0 / 17;
+    map[15] = 6.0 / 17;
     const thresold = globalThresold;
     const pixels = imgd.data;
     for (let y = 0; y < height * 4; y = y + 4) {

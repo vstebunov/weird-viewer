@@ -8,6 +8,7 @@
     position: absolute;
     background: transparent;
     width: 100%;
+    display: none;
 }
 
 .main-canvas {
@@ -21,3 +22,23 @@
     max-height: 100%;
 }
 
+.main-title {
+    background: rgba(255,255,255,0.6);
+    text-align: center;
+}
+
+.title-container {
+    position: absolute;
+    margin: auto 0;
+    width: 100%;
+}
+
+.title-animation {
+    animation: fadeout 2s ease-in alternate;
+    opacity: 0;
+}
+
+@keyframes fadeout {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
