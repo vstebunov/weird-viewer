@@ -3,13 +3,107 @@ let imageMode = "orderedZX";
 let globalThresold = 255 / 5;
 let allFilesList = [];
 let fileIndex = 0;
+let renderQueue = [];
 
 const canvas = document.getElementById('canvas');
 // resize work with problems
 canvas.setAttribute('width', 10000);
 canvas.setAttribute('height', 10000);
 
+const btnShowFileList = document.getElementById('btnShowFileList');
+btnShowFileList.addEventListener('click', () => {
+    fileList.style.display = 'block';
+});
+
+const btnAtkinson = document.getElementById('btnAtkinson');
+btnAtkinson.addEventListener('click', () => {
+    imageMode = 'ditherAtkinson';
+    render();
+});
+
+const btnFloyd = document.getElementById('btnFloyd');
+btnFloyd.addEventListener('click', () => {
+    imageMode = 'ditherFloydSteinberg';
+    render();
+});
+
+const btnOrdered = document.getElementById('btnOrdered');
+btnOrdered.addEventListener('click', () => {
+    imageMode = 'ordered';
+    render();
+});
+
+const btnOrderedZX = document.getElementById('btnOrderedZX');
+btnOrderedZX.addEventListener('click', () => {
+    imageMode = 'orderedZX';
+    render();
+});
+
+const btnGray = document.getElementById('btnGray');
+btnGray.addEventListener('click', () => {
+    imageMode = 'gray';
+    render();
+});
+
+const btnNext = document.getElementById('btnNext');
+btnNext.addEventListener('click', () => {
+    nextImage();
+});
+
+const btnLast = document.getElementById('btnLast');
+btnLast.addEventListener('click', () => {
+    lastImage();
+});
+
+const btnThresoldPlus = document.getElementById('btnThresoldPlus');
+btnThresoldPlus.addEventListener('click', () => {
+    plusThersold();
+    render();
+});
+
+function plusThersold() {
+    globalThresold++;
+    if (globalThresold > 255) {
+        globalThresold = 255;
+    }
+}
+
+const btnThresoldMinus = document.getElementById('btnThresoldMinus');
+btnThresoldMinus.addEventListener('click', () => {
+    minusThresold();
+    render();
+});
+
+function minusThresold() {
+    globalThresold--;
+    if (globalThresold <= 0) {
+        globalThresold = 0;
+    }
+}
+
+const btnThresoldReset = document.getElementById('btnThresoldReset');
+btnThresoldReset.addEventListener('click', () => {
+    globalThresold = 255 / 5;
+});
+
+function nextImage() {
+    fileIndex++;
+    if (fileIndex > allFilesList.length) {
+        fileIndex = allFilesList.length - 1;
+    }
+    loadByIndex(fileIndex);
+}
+
+function lastImage() {
+    fileIndex--;
+    if (fileIndex < 0) {
+        fileIndex = 0;
+    }
+    loadByIndex(fileIndex);
+}
+
 document.addEventListener('keypress', event => {
+    event.stopPropagation();
     if (event.key === 'a') {
         imageMode = 'ditherAtkinson';
     } else if (event.key === 'f') {
@@ -21,34 +115,58 @@ document.addEventListener('keypress', event => {
     } else if (event.key === 'z') {
         imageMode = 'orderedZX'
     } else if (event.key === 'q') {
-        globalThresold = globalThresold + 1;
+        plusThersold();
     } else if (event.key === 'w') {
-        globalThresold = globalThresold - 1;
+        minusThresold();
     } else if (event.key === 'j') {
-        fileIndex++;
-        if (fileIndex > allFilesList.length) {
-            fileIndex = allFilesList.length - 1;
-        }
-        loadByIndex(fileIndex);
+        lastImage();
+        return;
     } else if (event.key === 'k') {
-        fileIndex--;
-        if (fileIndex < 0) {
-            fileIndex = 0;
-        }
-        loadByIndex(fileIndex);
+        nextImage();
+        return;
     }
     render();
 });
 
+function showThresoldButton() {
+    btnThresoldPlus.style.display = 'inline-block';
+    btnThresoldMinus.style.display = 'inline-block';
+    btnThresoldReset.style.display = 'inline-block';
+}
+
+function hideThresoldButton() {
+    btnThresoldPlus.style.display = 'none';
+    btnThresoldMinus.style.display = 'none';
+    btnThresoldReset.style.display = 'none';
+}
+
+function blockButtons() {
+    [btnGray, btnLast, btnNext, btnFloyd, btnOrdered, btnAtkinson,btnOrderedZX, btnShowFileList, btnThresoldPlus, btnThresoldMinus, btnThresoldReset].forEach( button => button.setAttribute('disabled', 'disabled'));
+}
+
+function unblockButtons() {
+    [btnGray, btnLast, btnNext, btnFloyd, btnOrdered, btnAtkinson,btnOrderedZX, btnShowFileList, btnThresoldPlus, btnThresoldMinus, btnThresoldReset].forEach( button => button.removeAttribute('disabled'));
+}
+
 function render () {
+    if (renderQueue.length > 0) {
+        renderQueue.push(true);
+        return;
+    }
     const image = document.getElementById('image');
     const canvas = document.getElementById('canvas');
     const imageModeTitle = document.getElementById('modename');
-    imageModeTitle.innerHTML = imageMode;
+    imageModeTitle.innerHTML = (imageMode === 'ordered' || imageMode === 'orderedZX') ?
+        `${imageMode}(${globalThresold})` : imageMode;
     imageModeTitle.classList.remove('title-animation');
     /// -> triggering reflow /* The actual magic */
     imageModeTitle.offsetWidth;
     imageModeTitle.classList.add('title-animation');
+    if (imageMode === 'ordered' || imageMode == 'orderedZX') {
+        showThresoldButton();
+    } else {
+        hideThresoldButton();
+    }
     const context = canvas.getContext('2d', {willReadFrequently: true});    
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(image, 0, 0);  
@@ -81,6 +199,11 @@ function render () {
     }
     // Draw the ImageData object at the given (x,y) coordinates.
     context.putImageData(filteredImageData, 0,0);
+    if (renderQueue.length > 0) {
+        console.log({renderQueue});
+        renderQueue = [];
+        render();
+    }
 }
 
 fileList.addEventListener('change', event => {
@@ -114,6 +237,7 @@ function loadByIndex(index) {
     const filePath = allFilesList[index].path;
     const image = document.getElementById('image');
     const title = document.getElementById('imagename');
+    blockButtons();
     image.src = filePath;
     image.onload = () => {
         title.innerHTML = allFilesList.find(file => file.path === filePath).name || '';
@@ -122,11 +246,15 @@ function loadByIndex(index) {
         title.offsetWidth;
         title.classList.add('title-animation');
         render();
+        unblockButtons();
     };
 }
 
 const renderDir = async () => {
-    allFilesList = await window.files.getAllFiles();
+    allFilesList = (await window.files
+        .getAllFiles())
+        .filter( file => file.name.match(/\.jpe?g$/));
+    // const filteredAllFileList = allFilesList.filter();
     const newList = allFilesList.map(file => `<option value='${file.path}'>${file.name}</option>`);
     const fileList = document.getElementById('files');
     fileList.innerHTML = newList.join();
