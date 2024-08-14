@@ -4,6 +4,7 @@ let globalThresold = 255 / 5;
 let allFilesList = [];
 let fileIndex = 0;
 let renderQueue = [];
+// let currentDirectory;
 
 const canvas = document.getElementById('canvas');
 // resize work with problems
@@ -102,6 +103,14 @@ function lastImage() {
     loadByIndex(fileIndex);
 }
 
+const btnSelectDir = document.getElementById('btnSelectDir');
+btnSelectDir.addEventListener('click', () => {
+    window.postMessage({
+        type: 'select-dir'
+    });
+    renderDir();
+});
+
 document.addEventListener('keypress', event => {
     event.stopPropagation();
     if (event.key === 'a') {
@@ -140,12 +149,14 @@ function hideThresoldButton() {
     btnThresoldReset.style.display = 'none';
 }
 
+const panelButtons = [btnGray, btnLast, btnNext, btnFloyd, btnOrdered, btnAtkinson,btnOrderedZX, btnShowFileList, btnThresoldPlus, btnThresoldMinus, btnThresoldReset, btnSelectDir];
+
 function blockButtons() {
-    [btnGray, btnLast, btnNext, btnFloyd, btnOrdered, btnAtkinson,btnOrderedZX, btnShowFileList, btnThresoldPlus, btnThresoldMinus, btnThresoldReset].forEach( button => button.setAttribute('disabled', 'disabled'));
+    panelButtons.forEach( button => button.setAttribute('disabled', 'disabled'));
 }
 
 function unblockButtons() {
-    [btnGray, btnLast, btnNext, btnFloyd, btnOrdered, btnAtkinson,btnOrderedZX, btnShowFileList, btnThresoldPlus, btnThresoldMinus, btnThresoldReset].forEach( button => button.removeAttribute('disabled'));
+    panelButtons.forEach( button => button.removeAttribute('disabled'));
 }
 
 function render () {
@@ -200,7 +211,6 @@ function render () {
     // Draw the ImageData object at the given (x,y) coordinates.
     context.putImageData(filteredImageData, 0,0);
     if (renderQueue.length > 0) {
-        console.log({renderQueue});
         renderQueue = [];
         render();
     }
@@ -250,11 +260,10 @@ function loadByIndex(index) {
     };
 }
 
-const renderDir = async () => {
+const renderDir = async (currentDirectory) => {
     allFilesList = (await window.files
-        .getAllFiles())
+        .getAllFiles(currentDirectory))
         .filter( file => file.name.match(/\.jpe?g$/));
-    // const filteredAllFileList = allFilesList.filter();
     const newList = allFilesList.map(file => `<option value='${file.path}'>${file.name}</option>`);
     const fileList = document.getElementById('files');
     fileList.innerHTML = newList.join();
@@ -262,6 +271,11 @@ const renderDir = async () => {
 }
 
 renderDir();
+
+window.addEventListener('onChangeDir', (event) => {
+    const currentDirectory = event.detail ?? undefined;
+    renderDir(currentDirectory);
+});
 
 function invertColors(imgd) {
     const pix = imgd.data;
