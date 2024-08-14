@@ -11,9 +11,13 @@ const canvas = document.getElementById('canvas');
 canvas.setAttribute('width', 10000);
 canvas.setAttribute('height', 10000);
 
-const btnShowFileList = document.getElementById('btnShowFileList');
-btnShowFileList.addEventListener('click', () => {
-    fileList.style.display = 'block';
+const btnToggleFileList = document.getElementById('btnToggleFileList');
+btnToggleFileList.addEventListener('click', () => {
+    if (fileList.style.display === 'none') {
+        fileList.style.display = 'block';
+    } else {
+        fileList.style.display = 'none';
+    }
 });
 
 const btnAtkinson = document.getElementById('btnAtkinson');
@@ -149,7 +153,7 @@ function hideThresoldButton() {
     btnThresoldReset.style.display = 'none';
 }
 
-const panelButtons = [btnGray, btnLast, btnNext, btnFloyd, btnOrdered, btnAtkinson,btnOrderedZX, btnShowFileList, btnThresoldPlus, btnThresoldMinus, btnThresoldReset, btnSelectDir];
+const panelButtons = [btnGray, btnLast, btnNext, btnFloyd, btnOrdered, btnAtkinson,btnOrderedZX, btnToggleFileList, btnThresoldPlus, btnThresoldMinus, btnThresoldReset, btnSelectDir];
 
 function blockButtons() {
     panelButtons.forEach( button => button.setAttribute('disabled', 'disabled'));
@@ -235,6 +239,8 @@ fileList.addEventListener('change', event => {
     };
 });
 
+fileList.style.display = 'none';
+
 function loadByIndex(index) {
     if (!allFilesList[index]) {
         console.log('file not have path', allFilesList, index);
@@ -276,6 +282,7 @@ window.addEventListener('onChangeDir', (event) => {
     const currentDirectory = event.detail ?? undefined;
     renderDir(currentDirectory);
 });
+
 
 function invertColors(imgd) {
     const pix = imgd.data;
