@@ -28,9 +28,24 @@ const createWindow = () => {
         }
     };
 
+    const saveFile = async (event, bin) => {
+        const result = await dialog.showSaveDialog(win, {
+            properties: ['createDirectory'],
+            filters: [
+                { name: 'Images', extensions: ['png'] },
+            ]
+        });
+        if (!result.canceled) {
+            const data = bin.replace(/^data:image\/\w+;base64,/, "");
+            const buf = Buffer.from(data, "base64");
+            fs.writeFileSync(result.filePath, buf);
+        }
+    };
+
     ipcMain.handle('ping', () => 'pong');
     ipcMain.handle('getAllFiles', getAllFiles);
     ipcMain.handle('selectDir', selectDir);
+    ipcMain.handle('saveFile', saveFile);
 
     win.loadFile('index.html');
 };

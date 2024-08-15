@@ -1,7 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('files', {
-    getAllFiles: (path) => ipcRenderer.invoke('getAllFiles', path)
+    getAllFiles: (path) => ipcRenderer.invoke('getAllFiles', path),
+    saveFile: (binary) => ipcRenderer.invoke('saveFile', binary)
 });
 
 process.once('loaded', () => {

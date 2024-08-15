@@ -3,9 +3,10 @@
 }
 
 .main-image {
-    max-width: 100%; 
+    max-width: 20%; 
     max-height: 100%;
-    position: absolute;
+    position: sticky;
+    margin: auto 70%;
 }
 
 .main-select {
@@ -19,9 +20,6 @@
 }
 
 .canvas-pos {
-    position: absolute;
-    left: 50%;
-    top: 0;
     max-width: 100%;
     max-height: 100%;
 }
@@ -32,7 +30,7 @@
 }
 
 .button-container {
-    position: absolute;
+    position: sticky;
     margin: auto 0;
     width: 100%;
     z-index: 1;
@@ -52,4 +50,9 @@
 @keyframes fadeout {
     from { opacity: 1; }
     to { opacity: 0; }
+}
+
+.toolbar {
+    width: 100%;
+    position: absolute;
 }

@@ -115,6 +115,21 @@ btnSelectDir.addEventListener('click', () => {
     renderDir();
 });
 
+function dataURLtoBlob(dataurl) {
+        var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                bstr = window.atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while(n--){
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+        return new Blob([u8arr], {type:mime});
+}
+
+const btnSave = document.getElementById('btnSave');
+btnSave.addEventListener('click', async () => {
+    const imageData = canvas.toDataURL('image/png');
+    await window.files.saveFile(imageData);
+});
+
 document.addEventListener('keypress', event => {
     event.stopPropagation();
     if (event.key === 'a') {
@@ -153,7 +168,7 @@ function hideThresoldButton() {
     btnThresoldReset.style.display = 'none';
 }
 
-const panelButtons = [btnGray, btnLast, btnNext, btnFloyd, btnOrdered, btnAtkinson,btnOrderedZX, btnToggleFileList, btnThresoldPlus, btnThresoldMinus, btnThresoldReset, btnSelectDir];
+const panelButtons = [btnGray, btnLast, btnNext, btnFloyd, btnOrdered, btnAtkinson,btnOrderedZX, btnToggleFileList, btnThresoldPlus, btnThresoldMinus, btnThresoldReset, btnSelectDir, btnSave];
 
 function blockButtons() {
     panelButtons.forEach( button => button.setAttribute('disabled', 'disabled'));
@@ -183,6 +198,8 @@ function render () {
         hideThresoldButton();
     }
     const context = canvas.getContext('2d', {willReadFrequently: true});    
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(image, 0, 0);  
     const imgd = context.getImageData(0, 0, image.naturalWidth, image.naturalHeight);

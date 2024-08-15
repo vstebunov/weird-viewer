@@ -14,22 +14,24 @@
     <title>Weird Viewer</title>
   </head>
   <body class="main">
-      <div class="button-container">
-        <button id="btnLast">&lt;&lt; Last (j)</button>
-        <button default id="btnNext">Next (k) &gt;&gt;</button>
-        <button id="btnSelectDir">Select directory</button>
-        <button id="btnToggleFileList">Toggle file list</button>
-        <button id="btnAtkinson">Atkinson (a)</button>
-        <button id="btnFloyd">Floyd-Sterling (f)</button>
-        <button id="btnOrdered">Ordered (s)</button>
-        <button id="btnOrderedZX">Ordered ZX (z)</button>
-        <button id="btnGray">Gray (g)</button>
-        <button id="btnThresoldPlus">Thresold +1 (q)</button>
-        <button id="btnThresoldMinus">Thresold -1 (w)</button>
-        <button id="btnThresoldReset">Reset thresold</button>
+      <div class="toolbar">
+          <div class="button-container">
+            <button id="btnLast">&lt;&lt; Last (j)</button>
+            <button default id="btnNext">Next (k) &gt;&gt;</button>
+            <button id="btnSave">Save file as...</button>
+            <button id="btnSelectDir">Select directory</button>
+            <button id="btnToggleFileList">Toggle file list</button>
+            <button id="btnAtkinson">Atkinson (a)</button>
+            <button id="btnFloyd">Floyd-Sterling (f)</button>
+            <button id="btnOrdered">Ordered (s)</button>
+            <button id="btnOrderedZX">Ordered ZX (z)</button>
+            <button id="btnGray">Gray (g)</button>
+            <button id="btnThresoldPlus">Thresold +1 (q)</button>
+            <button id="btnThresoldMinus">Thresold -1 (w)</button>
+            <button id="btnThresoldReset">Reset thresold</button>
+          </div>
+          <img id="image" src="" class="main-image" />
       </div>
-    <img id="image" src="" class="main-image" />
-
     <select id="files" size="30" class="main-select">
     </select>
     <div class="canvas-pos">
