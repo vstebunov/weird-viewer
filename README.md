@@ -17,3 +17,7 @@ Viewer that displays images after applying various dithering techniques.
 ## Sponsor me
 
 [By me a coffee](https://buymeacoffee.com/vstebunov)
+
+## Changelog
+
+* Added Ordered CGA
