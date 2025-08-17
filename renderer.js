@@ -346,7 +346,7 @@ function loadByIndex(index) {
 const renderDir = async (currentDirectory) => {
     allFilesList = (await window.files
         .getAllFiles(currentDirectory))
-        .filter( file => file.name.match(/\.jpe?g$/));
+        .filter( file => file.name.match(/\.[jpe?g$|png]/));
     const newList = allFilesList.map(file => `<option value='${file.path}'>${file.name}</option>`);
     const fileList = document.getElementById('files');
     fileList.innerHTML = newList.join();
