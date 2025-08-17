@@ -4,6 +4,7 @@ let globalThresold = 255 / 5;
 let allFilesList = [];
 let fileIndex = 0;
 let renderQueue = [];
+let pixelSize = 1;
 // let currentDirectory;
 
 const canvas = document.getElementById('canvas');
@@ -44,6 +45,13 @@ btnOrderedZX.addEventListener('click', () => {
     render();
 });
 
+const btnOrderedCGA = document.getElementById('btnOrderedCGA');
+btnOrderedCGA.addEventListener('click', () => {
+    imageMode = 'orderedCGA';
+    render();
+});
+
+
 const btnGray = document.getElementById('btnGray');
 btnGray.addEventListener('click', () => {
     imageMode = 'gray';
@@ -65,6 +73,28 @@ btnThresoldPlus.addEventListener('click', () => {
     plusThersold();
     render();
 });
+
+const btnPixelPlus = document.getElementById('btnPixelPlus');
+btnPixelPlus.addEventListener('click', () => {
+	if (pixelSize < image.naturalWidth) {
+		pixelSize++;
+	}
+	render();
+});
+
+const btnPixelMinus = document.getElementById('btnPixelMinus');
+btnPixelMinus.addEventListener('click', () => {
+	if (pixleSize > 1) {
+		pixelSize--;
+	}
+	render();
+});
+
+const btnSelectPalette = document.getElementById('btnSelectPalette');
+btnSelectPalette.addEventListener('click', () => {
+	alert('not implemented');
+});
+
 
 function plusThersold() {
     globalThresold++;
@@ -142,6 +172,8 @@ document.addEventListener('keypress', event => {
         imageMode = 'ordered'
     } else if (event.key === 'z') {
         imageMode = 'orderedZX'
+    } else if (event.key === 'y') {
+        imageMode = 'orderedCGA'
     } else if (event.key === 'q') {
         plusThersold();
     } else if (event.key === 'w') {
@@ -168,7 +200,25 @@ function hideThresoldButton() {
     btnThresoldReset.style.display = 'none';
 }
 
-const panelButtons = [btnGray, btnLast, btnNext, btnFloyd, btnOrdered, btnAtkinson,btnOrderedZX, btnToggleFileList, btnThresoldPlus, btnThresoldMinus, btnThresoldReset, btnSelectDir, btnSave];
+const panelButtons = [
+	btnGray, 
+	btnLast, 
+	btnNext, 
+	btnFloyd, 
+	btnOrdered, 
+	btnAtkinson,
+	btnOrderedZX, 
+	btnOrderedCGA,
+	btnToggleFileList, 
+	btnThresoldPlus, 
+	btnThresoldMinus, 
+	btnThresoldReset, 
+	btnSelectDir, 
+	btnSave,
+	btnSelectPalette,
+	btnPixelPlus,
+	btnPixelMinus
+];
 
 function blockButtons() {
     panelButtons.forEach( button => button.setAttribute('disabled', 'disabled'));
@@ -186,13 +236,13 @@ function render () {
     const image = document.getElementById('image');
     const canvas = document.getElementById('canvas');
     const imageModeTitle = document.getElementById('modename');
-    imageModeTitle.innerHTML = (imageMode === 'ordered' || imageMode === 'orderedZX') ?
+    imageModeTitle.innerHTML = (imageMode === 'ordered' || imageMode === 'orderedZX' || imageMode === 'orderedCGA') ?
         `${imageMode}(${globalThresold})` : imageMode;
     imageModeTitle.classList.remove('title-animation');
     /// -> triggering reflow /* The actual magic */
     imageModeTitle.offsetWidth;
     imageModeTitle.classList.add('title-animation');
-    if (imageMode === 'ordered' || imageMode == 'orderedZX') {
+    if (imageMode === 'ordered' || imageMode == 'orderedZX' || imageMode == 'orderedCGA') {
         showThresoldButton();
     } else {
         hideThresoldButton();
@@ -225,6 +275,8 @@ function render () {
             filteredImageData = toRGB(ordered, imgd);
         case "orderedZX":
             filteredImageData = ditherOrderedZX(imgd, image.naturalWidth, image.naturalHeight);
+        case "orderedCGA":
+            filteredImageData = ditherOrderedCGA(imgd, image.naturalWidth, image.naturalHeight);
             
         default:
             filteredImageData = imgd;
@@ -281,6 +333,14 @@ function loadByIndex(index) {
         render();
         unblockButtons();
     };
+    image.onerror = () => {
+	title.innerHTML = 'Fail to load';
+        title.classList.remove('title-animation');
+        /// -> triggering reflow /* The actual magic */
+        title.offsetWidth;
+        title.classList.add('title-animation');
+        unblockButtons();
+    }
 }
 
 const renderDir = async (currentDirectory) => {
@@ -445,10 +505,40 @@ function findClosestPaletteColorZX(red, green, blue, map_value, thresold) {
     g = 0;
     b = 0;
   } else if (m != 0xFF) {
-    r = r >= 0xD7 ? 0xD7 : 00;
-    g = g >= 0xD7 ? 0xD7 : 00;
-    b = b >= 0xD7 ? 0xD7 : 00;
+    r = r >= 0xD7 ? 0xD7 : 0o0;
+    g = g >= 0xD7 ? 0xD7 : 0o0;
+    b = b >= 0xD7 ? 0xD7 : 0o0;
   }
+  
+  return [r,g,b];
+}
+
+function findClosestPaletteColorCGA(red, green, blue, map_value, thresold) {
+  let r = red + map_value * thresold;
+  let g = green + map_value * thresold;
+  let b = blue + map_value * thresold;
+
+//  black
+//  cyan
+//  magneta
+//  lightgray
+	r = r >= 0xAA ? 0xAA : 0o0;
+	g = g >= 0xAA ? 0xAA : 0o0;
+	b = b >= 0xAA ? 0xAA : 0o0;
+	if (r === 0xAA && g === 0o0 && b === 0o0) {
+		//red to magneta
+		b = 0xAA
+	} else if (r === 0o0 && g === 0xAA && b === 0o0) {
+		// green to lightgray
+		r = 0xAA;
+		b = 0xAA;
+	} else if (r === 0o0 && g === 0o0 && b === 0xAA) {
+		// blue to cyan
+		g = 0xAA;
+	} else if (r === 0xAA && g === 0xAA && b === 0o0) {
+		// yellow to lightgray
+		b = 0xAA;
+	}
   
   return [r,g,b];
 }
@@ -479,6 +569,47 @@ function ditherOrderedZX(imgd, width, height) {
             const ny = y / 4;
             const map_value = map[(nx & 3) + ((ny & 3) << 2)];
             const new_pixel = findClosestPaletteColorZX(
+                pixels[x + y * width],
+                pixels[x + y * width + 1],
+                pixels[x + y * width + 2],
+                map_value, 
+                thresold
+            );
+            pixels[x + y * width] = new_pixel[0];  
+            pixels[x + y * width + 1] = new_pixel[1];  
+            pixels[x + y * width + 2] = new_pixel[2];  
+        }
+    }
+
+    return pixels;
+}
+
+function ditherOrderedCGA(imgd, width, height) {
+    const map = [];
+    map[0] = 1.0 / 17;
+    map[1] = 9.0 / 17;
+    map[2] = 3.0 / 17;
+    map[3] = 11.0 / 17;
+    map[4] = 14.0 / 17;
+    map[5] = 5.0 / 17;
+    map[6] = 16.0 / 17;
+    map[7] = 7.0 / 17;
+    map[8] = 4.0 / 17;
+    map[9] = 12.0 / 17;
+    map[10] = 2.0 / 17;
+    map[11] = 10.0 / 17;
+    map[12] = 16.0 / 17;
+    map[13] = 8.0 / 17;
+    map[14] = 14.0 / 17;
+    map[15] = 6.0 / 17;
+    const thresold = globalThresold;
+    const pixels = imgd.data;
+    for (let y = 0; y < height * 4; y = y + 4) {
+        for (let x = 0; x < width * 4; x = x + 4) {
+            const nx = x / 4;
+            const ny = y / 4;
+            const map_value = map[(nx & 3) + ((ny & 3) << 2)];
+            const new_pixel = findClosestPaletteColorCGA(
                 pixels[x + y * width],
                 pixels[x + y * width + 1],
                 pixels[x + y * width + 2],
